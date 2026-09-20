@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "daocha"
+version = "1.0.0"
+description = "倒插文献：从带【】的稿件提取引文位、核对文献并导出正文与 References"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Daocha" }]
+dependencies = [
+  "pymupdf>=1.24",
+  "python-docx>=1.1",
+  "nicegui>=2.10",
+  "platformdirs>=4.2",
+  "pywebview>=5.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pyinstaller>=6.10"]
+
+[project.scripts]
+daocha = "daocha.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["daocha*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,304 +1,232 @@
 # manuscript-citation-workflow
 
-根据已经写好的小论文引言内容，倒插参考文献。
+倒插文献：在已经写好的稿件里，把 `【1】` `【2】` 占位换成可核对的英文期刊引文，并导出正文和 References。
+
+这是一个本机桌面软件。窗口标题为「倒插文献」。打开后在窗口里完成抽取、检索、审阅、导出。检索和 DOI 拉取需要能访问 [Crossref](https://www.crossref.org/)。
+
+仓库：<https://github.com/Anastasia0521/manuscript-citation-workflow>
 
 ---
 
-## 一、开始前你要准备什么
+## 开始前准备什么
 
-1. **一篇带【】占位符的稿件**  
-   正文里每个要填文献的地方，都写成单独的 `【1】`、`【2】`……  
-   **不要**写成 `【1–5】`，或一句里多个号挤在一起当一条。
+1. **稿件**  
+   支持 PDF、Word（`.docx`）、`.txt`、`.md`。不支持旧版 `.doc`。  
+   每个要插文献的位置写成单独的 `【1】`、`【2】`、`【3】`。  
+   不要写成 `【1-3】`，不要同一个号用两次，不要空的 `【】`，括号里只能是数字。  
+   `【 1 】` 或全角数字 `【２】` 会在抽取时自动收成 `【1】`、`【2】`。
 
-2. **PDF 文件路径**  
-   例如：`G:\小论文\xxx\Manuscript.pdf`  
-   Agent 会从这个 PDF 里数【】、提取原句。
+2. **英文期刊论文的 DOI，或英文检索词**  
+   只采用带 DOI 的英文期刊论文（Crossref 类型 `journal-article`）。  
+   没有 DOI、不是期刊论文、题名含中文、或属于 MDPI 的，都不能保留，请换一篇。  
+   稿件**正文**可以是中文或英文。
 
-3. **给这篇论文起一个 project-id**  
-   英文短名即可，例如：`jem-grassland-pes`、`my-paper-2026`。  
-   每篇论文一个独立文件夹，互不干扰。
+3. **Python 3.11 或更高**（从源码运行时）  
+   若使用已经打包好的 `Daocha.exe`，不需要安装 Python。
 
-4. **工作目录**  
-   工具在：`d:\cursor\code\web\manuscript-citation-workflow\`
-
-5. **Python 环境**（Agent 一般会帮你跑；你自己跑脚本时需要）
-
-   ```bash
-   pip install pymupdf
-   ```
+不要准备期刊库，也不要先建项目编号。软件会按稿件标题生成项目文件夹。
 
 ---
 
-## 二、怎么叫出这个 Agent
+## 安装和启动
 
-在 Cursor 聊天里，用下面任一方式开头：
+在仓库根目录：
 
-- `@manuscript-citation-workflow`
-- 或直接说：**倒插文献**、**填【】**、**引文阶段1**
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\daocha.exe
+```
 
-Agent 会按四阶段流水线工作。**必须一阶段一阶段来，不能跳。**
+macOS / Linux：
+
+```bash
+python -m venv .venv
+.venv/bin/pip install -e .
+.venv/bin/daocha
+```
+
+Windows 也可双击 `run.bat`：若还没有虚拟环境，它会创建 `.venv`、执行 `pip install -e .`，然后启动 `daocha`。`run.bat` 会把后面的参数原样传给程序，例如 `run.bat --browser`。
+
+独立窗口打不开时：
+
+```powershell
+.\.venv\Scripts\daocha.exe --browser
+```
+
+启动相关参数只有 `--browser`：用系统浏览器打开同一套界面。`--help` 可查看说明。不要在命令行传稿件路径；选文件在窗口里完成。
 
 ---
 
-## 三、全流程总览（四阶段）
+## 窗口里怎么用
 
-| 阶段 | 内容 |
+### 首页
+
+首页顶部是「倒插文献」，说明文字是「把带【】的稿件做成可核对、可导出的引文稿。」
+
+| 按钮 | 作用 |
 |------|------|
-| 阶段 1 | 查文献、做核查表 → 你在 Canvas 里审 |
-| 阶段 2 | 按你的意见改 → 可多轮 |
-| 阶段 3 | 导出可粘贴正文 |
-| 阶段 4 | 导出 References 列表 |
+| **新建稿件** | 开始一篇新的倒插 |
+| **导入旧项目** | 选择已有的 `citation-registry.json`，可选再选对应稿件 |
+| **更改存放位置** | 改项目文件夹所在磁盘或网盘 |
+
+当前路径显示为「项目存放在：…」。默认是用户数据目录，例如：
+
+`C:\Users\<用户名>\AppData\Local\Daocha\Daocha\projects\`
+
+还没有稿件时提示：「还没有稿件。先选一份带【1】【2】的 PDF 或 Word。」  
+已有项目显示为卡片：标题、目标期刊、引文处数、阶段；点 **打开**。
+
+### 新建稿件
+
+对话框标题「新建稿件」，填写：
+
+| 字段 | 作用 |
+|------|------|
+| 稿件标题 | 窗口和列表里的显示名称；同时用来生成项目文件夹名 |
+| 目标期刊 | 只决定括号和参考文献排版，不限制能检索哪个领域 |
+| 稿件文件 | 点 **浏览** 选择 PDF / `.docx` / `.txt` / `.md` |
+
+点 **创建并提取【】**。软件把稿件复制进项目目录（文件名变为 `manuscript.pdf` 等），抽出全部合法 `【n】`，生成 `citation-registry.json`，然后进入该项目。点 **取消** 关闭对话框。
+
+目标期刊四个选项与排版对应关系：
+
+| 选项 | 正文括号 | References 体例 |
+|------|----------|-----------------|
+| Journal of Environmental Management | `(Author, Year)` | JEM：作者缩写、刊名缩写、卷(期)、页码、DOI |
+| 生态学报 | `（Author, Year）` | GB/T 7714 著者-出版年制 |
+| GB/T 7714 著者-出版年制 | `（Author, Year）` | 同上 |
+| 通用英文作者—年份 | `(Author, Year)` | 与 JEM 相同的英文作者—年份 |
+
+抽取失败时停在首页并用通知提示原因，**不会**生成半成品项目。失败原因包括：
+
+- 空括号（数字丢失，常见于 Word 转 PDF）
+- 合并/范围编号（如 `【1-3】`）
+- 同一个号用了两次
+- 不是纯数字编号
+- 文件不是 PDF / `.docx` / `.txt` / `.md`（包括旧版 `.doc`）
+- 全文没有找到任何 `【n】`
+
+Word（`.docx`）只读正文段落和表格，不读页眉、页脚、脚注。  
+PDF 按每一页的全文抽取；不要把 `【n】` 写在页眉、页脚或页码旁，以免被当成引文位。
+
+### 导入旧项目
+
+对话框标题「导入旧的倒插文献项目」。说明：「会把 registry 和稿件复制进本机数据目录，不再依赖原来的盘符。」
+
+1. 必选：旧版 `citation-registry.json`
+2. 可选：稿件（找不到原路径时再选；浏览支持 PDF / `.docx` / `.txt` / `.md`）
+
+点 **导入**。旧数据里的决定会映射到当前三种（保留 / 删除【】 / 更换文献）；无法识别的特殊决定会改成「保留」。
+
+### 核查
+
+进入项目后，顶栏是稿件标题，右侧 **全部稿件** 回到首页。顶栏下显示：期刊、引文位数量、已填 DOI、已锁定、存放路径。两个页签：**核查**、**导出**。
+
+左侧每一处显示为 `C001 【1】`，以及当前文献短名或「尚未填写文献」，角标为 `pending` 或 `locked`。点进去后：
+
+1. 查看抽出的原句（来自稿件里含该 `【n】` 的那一句；中英文都能断句，英文空格会保留）。
+2. 填写「这句话要支撑的主张」（可选；失焦时保存。检索框会预填这项内容）。
+3. 用下面任一方式指定文献：
+   - 粘贴 DOI，点 **用 DOI 拉取**（Crossref 补全题名、作者、刊名、卷期页）。不是 `journal-article`、没有 DOI、题名含中文、或 MDPI，会提示错误，不会写入。
+   - 在「按主张或关键词检索 Crossref」里输入英文关键词，点 **检索候选文献**，在结果里点 **采用这篇**。检索使用 Crossref 的 `query.bibliographic`，过滤为 `journal-article`，去掉没有 DOI、MDPI、以及题名含中文的记录，最多列出 8 条。没有可用结果时提示：「没有可用的英文期刊论文（MDPI 已过滤）。请改英文关键词，或直接填 DOI。」
+4. 有 DOI 时出现链接 **打开 DOI 核对**，在浏览器里核对该篇是否真实、是否支撑原句。
+5. 选择「决定」，可填「备注」，点 **保存** 或 **锁定本条**。
+
+决定只有这些选项：
+
+| 界面选项 | 写入 registry 的值 | 锁定 / 导出 |
+|----------|-------------------|-------------|
+| 未决定 | 空 | **保存**可以；**锁定本条**会当成「保留」，因此必须已有 DOI。导出前不能保持未决定 |
+| 保留 | `keep` | 必须已有 DOI 才能锁定。导出时正文插入 `(Author, Year)` 或 `（Author, Year）`，并进入 References |
+| 删除【】 | `delete_marker` | 可以无 DOI 锁定。导出时正文留下空的 `【】`，不进 References |
+| 更换文献 | `replace` | 表示本条未完成。不能锁定，也不能导出；请改成保留或删除【】 |
+
+**锁定已填条目**（在导出页）不会处理「更换文献」：有 DOI 且尚未选择决定的，会标成保留并锁定；已选删除【】的一并锁定；没有 DOI 的不锁。
+
+同一 DOI 在一篇稿里最多用 2 次（按 C001、C002… 顺序计，删除【】的不计）。MDPI 一律拒绝：Crossref 成员 1968、出版社名含 MDPI、DOI 前缀 `10.3390` / `10.1989` / `10.20944` / `10.32545` / `10.35995`，以及内置的 MDPI 刊名列表。
+
+### 导出
+
+前置：每一条 `status` 都是 `locked`；决定只能是「保留」或「删除【】」；选「保留」的必须有 DOI；同一 DOI 不超过 2 次；【】仍然一对一。
+
+按钮：
+
+| 按钮 | 作用 |
+|------|------|
+| 检查 DOI 预算 | 在「检查与导出结果」里报告：同一 DOI 是否超过 2 次、【】是否一对一 |
+| 锁定已填条目 | 见上一节。通知为「已锁定所有已填条目」 |
+| 导出正文和参考文献 | 同时写出下面两个文件。成功时结果框显示写出路径 |
+
+写出位置就在该项目文件夹（顶栏「存放：」后面的路径）：
+
+- `phase3-cited-paragraphs.md`  
+  对照表（完整书目，供核对）+「段内引文版正文（可粘贴）」。`delete_marker` 处保留空【】。相邻多处引文会合成为一个括号，分号加空格分隔。同作者同年但 DOI 不同会加 `a`/`b`。
+- `phase4-references.md`  
+  核查摘要 + 按作者排序、按 DOI 去重的 References。只有「保留」且带 DOI 的文献进入列表。
+
+导出未通过时（还有未锁定、仍是「更换文献」或未决定、缺 DOI、DOI 超次数、【】不是一对一），窗口里会显示原因，不会覆盖写出错误列表充当成稿。
+
+页底说明：「导出文件写在本项目文件夹里，整夹拷走即可换电脑继续。」
 
 ---
 
-## 四、阶段 1：查文献 + 做核查表
+## 项目文件夹里有什么
 
-### 1. 你要说的话（示例）
-
-```text
-@manuscript-citation-workflow 引文阶段1
-PDF：G:\你的路径\Manuscript.pdf
-project-id：my-new-paper
-稿件标题：（可选，写上更好）
-目标期刊：Journal of Environmental Management
+```
+<项目名>/
+  manuscript.pdf          # 或 .docx / .txt / .md，新建时复制进来
+  citation-registry.json  # 每处【】的状态和文献
+  phase3-cited-paragraphs.md   # 导出后才有
+  phase4-references.md         # 导出后才有
 ```
 
-### 2. Agent 会做什么
+标题和已有项目重名时不会覆盖，文件夹会变成 `原名-2`、`原名-3`。
 
-1. 新建文件夹：`manuscript-citation-workflow/my-new-paper/`
-2. 从 PDF 提取所有【】，生成 `citation-registry.json`（每条【】一行，叫 C001、C002……）
-3. 为每个【】找真实文献、填 DOI、写 claim（这句话在支撑什么观点）、标证据强度 A/B/C
-4. 检查规则（见下文「硬性规则」）
-5. 生成 Canvas 核查表（可视化审阅界面，带 DOI 链接）
-
-### 3. 你会得到什么
-
-1. **`citation-registry.json` 文件**：机器用的总账本，记录每条【】的文献和状态
-2. **Canvas 页面**：给人看的核查表，按章节折叠，可点 DOI
-3. **Canvas 路径类似**：  
-   `C:\Users\Administrator\.cursor\projects\d-cursor-code-web\canvases\<项目名>-citation-audit-phase1.canvas.tsx`
-
-### 4. 你要做什么
-
-1. 在 Cursor 里打开 Canvas（**不是**改 `.tsx` 源码）
-2. 逐条看：文献对不对、DOI 能不能点开、claim 是否匹配你的句子
-3. 对每条选决定（见下表）
-
-   | 你的选择 | 含义 |
-   |----------|------|
-   | `keep` | 保留 Agent 推荐的文献 |
-   | `delete_marker` | 这个【】不填文献，正文里保留空【】 |
-   | `replace` | 换一篇文献（说明理由或给 DOI） |
-   | `split_feock_inline` | 正文自己归纳，只插一条分维引用（特殊场景） |
-   | `keep_engel_2008` | 保留 Engel 2008（讨论节等特殊保留） |
-
-4. 审完后，点 Canvas 里的 **「将审阅意见发送到聊天」**，或在聊天里直接说：
-
-   ```text
-   C007 delete_marker
-   C012 replace，换用 xxx 2020
-   C003 keep
-   ```
-
-### 5. 阶段 1 结束标志
-
-1. Canvas 里每条你都看过
-2. 你发出了审阅意见 → 进入阶段 2
-
-> **注意**：阶段 1 **不会**给你可粘贴的正文，只有核查表。
+换电脑时：拷整个项目文件夹。软件本身另拷（见下）。首页 **打开** 已有项目后，可在核查里改条目再重新导出。
 
 ---
 
-## 五、阶段 2：按你的意见改（可多轮）
+## 做成可拷贝的 Windows 程序
 
-### 1. 你要说的话（示例）
+仓库根目录执行：
 
-```text
-引文阶段2
-C007 delete_marker
-C028 delete_marker
-C012 replace，理由：原推荐只支撑子观点
-C058 keep
+```powershell
+.\scripts\build_windows.ps1
 ```
 
-或：`Canvas 审阅意见已发送`（Agent 会读 `.canvas.data.json`）
+该脚本会：如无 `.venv` 则创建；`pip install -e ".[dev]"`（含 PyInstaller）；按 `daocha.spec` 打包。完成后提示可执行文件在 `dist\Daocha\Daocha.exe`。
 
-### 2. Agent 会做什么
+把 **整个** `dist\Daocha` 文件夹拷到另一台 Windows 电脑（必须包含 `Daocha.exe` 和 `_internal`），双击 `Daocha.exe`。不要只拷 exe。
 
-1. 更新 `citation-registry.json` 里每条的决定
-2. 对 `replace` 的条目重新找文献
-3. 检查 DOI 预算（同一 DOI 全文最多用 2 次）
-4. 把确认过的条目标成 `status: locked`
-5. 同步 Canvas，给你变更摘要（改了哪些 C00x、为什么改）
-
-### 3. 你要做什么
-
-1. 如果还有 `pending`（未确认）的条目 → 继续审 Canvas，再发意见
-2. 如果全部 `locked` 且 Agent 说 DOI 预算通过 → 可以进阶段 3
-3. 可以多轮，不满意就继续。例如继续说：
-
-   ```text
-   引文阶段2，C035 replace，Yin 那篇 DOI 不对
-   ```
-
-   直到你满意为止。
+稿件数据不在安装目录里，仍在上面的用户 `projects` 目录，或你在首页改过的存放位置。
 
 ---
 
-## 六、阶段 3：导出可粘贴正文
+## 硬性规则
 
-### 1. 前置条件（缺一不可）
+软件会执行这些检查，不是文档里的建议：
 
-- 所有条目 `status: locked`
-- 你说：**「全部确认」**
-- DOI 预算检查通过（零违规）
-
-### 2. 你要说的话
-
-```text
-引文阶段3，全部确认
-```
-
-### 3. Agent 会运行（或你自己跑）
-
-```bash
-cd d:\cursor\code\web\manuscript-citation-workflow
-python _backfill_source_paragraphs.py
-python _phase34_export.py manuscript-citation-workflow/my-new-paper/citation-registry.json --require-locked
-```
-
-### 4. 你会得到
-
-`my-new-paper/phase3-cited-paragraphs.md`，两部分：
-
-- **Part 1 — 对照表（核对用）**：每个【】对应一行，是完整书目引文（含题名、期刊、DOI）。
-- **Part 2 — 段内引文版正文（直接粘贴用）**。示例：
-
-  > ……遥感监测（Hou et al., 2021）、面板数据回归（Hu et al., 2019）、双重差分（Xiao et al., 2025）、断点回归【】以及生态—经济耦合评价（Burkhard et al., 2012）……
-
-### 5. 你要做什么
-
-1. 打开 `phase3-cited-paragraphs.md`
-2. 从 **Part 2** 复制段落，贴回 Word/LaTeX
-3. 用 **Part 1** 核对完整引文是否正确
+1. 一个 `【n】` 对应登记表一行；空号、范围号、重复号、非数字编号会在抽取时失败。
+2. 只接受带 DOI 的英文期刊论文；无 DOI、非 `journal-article`、题名含中文，都不能保留。
+3. 禁止 MDPI。
+4. 同一 DOI 最多出现 2 次。
+5. 导出要求全部锁定，且每条只能是保留或删除【】。
 
 ---
 
-## 七、阶段 4：导出 References
+## 常见问题
 
-### 1. 你要说的话
+**检索没有结果？**  
+用英文关键词，或直接填 DOI。中文主张作为检索词往往命中很差。MDPI、无 DOI、非期刊论文、题名含中文的记录不会出现在候选里。
 
-```text
-引文阶段4
-```
+**PDF 抽出的句子有错字或断句怪？**  
+抽出后仍可在「主张」和导出正文里人工核对。正文来源是稿件里含【】的那一句。
 
-（阶段 3 跑 `_phase34_export.py` 时，已经同时生成了 phase4，通常不用再单独跑）
+**如何继续改已经做过的稿？**  
+首页点 **打开**，或从项目页点 **全部稿件** 再打开对应项目，在核查里改条目后重新导出。
 
-### 2. 你会得到
+**标题和已有项目重名？**  
+不会覆盖。文件夹会变成 `原名-2`、`原名-3`。
 
-`my-new-paper/phase4-references.md`  
-按 JEM 体例、DOI 去重、字母序排列的参考文献列表。
-
-### 3. 你要做什么
-
-核对 DOI、卷期页码，贴到稿件末尾 References 部分。
-
----
-
-## 八、硬性规则（Agent 会自动检查，你也应知道）
-
-1. **禁止 MDPI 期刊**
-2. **同一 DOI 全文最多 2 次**（按 C001 → C002 → … 顺序消耗）
-3. **一个【】= 一条 registry**，不能合并
-4. **只推荐真实可查的文献**，不能编造
-5. **C 级证据不能作为【】处唯一推荐**；找不到 A/B 级 → 删【】或改述
-6. **阶段不能跳**：1 → 2 → 3 → 4
-
----
-
-## 九、不要做的事
-
-1. **不要**直接改 Canvas 的 `.tsx` 源码 — 在 Canvas 预览界面里操作
-2. **不要**在阶段 1 就要求 paste-ready 正文 — 那是阶段 3 的事
-3. **不要**跳过「全部确认」就进阶段 3 — 会报错或被拒绝
-4. **PDF 改了之后**，要重新跑 `_backfill_source_paragraphs.py` 再导出
-
----
-
-## 十、每篇新论文的「最短启动清单」
-
-1. 稿件里每个引文位写成单独 `【n】`
-2. 准备好 PDF 绝对路径 + `project-id`
-3. 聊天：`@manuscript-citation-workflow 引文阶段1`，`PDF：...`，`project-id：...`
-4. 打开 Canvas 审阅 → 发意见
-5. 聊天：`引文阶段2` + 你的 C00x 决定（可多轮）
-6. 聊天：`引文阶段3，全部确认`
-7. 打开 phase3 Part 2 粘贴正文；phase4 粘贴 References
-
----
-
-## 十一、常见问题
-
-**Q：继续改某篇已做过的论文？**  
-说 `project-id` 和要改的 C00x，从阶段 2 继续即可。
-
-**Q：PDF 里中文乱码、个别句子不对？**  
-PDF 提取有时不完美；Part 2 大部分句子可用，个别需手工微调。以后可考虑用 Word 作源文件（可再扩展）。
-
-**Q：Canvas 和 registry 不一致？**  
-让 Agent 运行 `_generate_canvas.py` 重建 Canvas，或 `_phase2_sync_from_canvas.py` 从 Canvas 同步回 registry。
-
-**Q：怎么知道能不能进阶段 3？**  
-Agent 会说「全部 locked + DOI 预算通过」；或自己跑：
-
-```bash
-python _validate_doi_budget.py
-```
-
----
-
-## 十二、你实际在聊天里怎么说（模板）
-
-### 1. 新论文第一次
-
-```text
-@manuscript-citation-workflow 引文阶段1
-PDF：G:\路径\Manuscript.pdf
-project-id：paper-abc
-目标期刊：JEM
-```
-
-### 2. 审完后
-
-```text
-引文阶段2
-C001 keep
-C007 delete_marker
-C012 replace，需要支撑 RDD 方法的中文草原研究
-```
-
-### 3. 全部满意
-
-```text
-引文阶段3，全部确认
-```
-
-### 4. 要 References
-
-```text
-引文阶段4
-```
-
-（若阶段 3 已跑过，直接打开 `phase4-references.md` 即可，无需再说这句话）
-
----
-
-## 总结
-
-这就是完整流程。核心就三句：
-
-1. **阶段 1** 在 Canvas 审文献
-2. **阶段 2** 改到全部 `locked`
-3. **阶段 3** 复制 Part 2 贴回稿件
-
-其余都是 Agent 和脚本在后台跑。
+许可：MIT（见 `LICENSE`）。
