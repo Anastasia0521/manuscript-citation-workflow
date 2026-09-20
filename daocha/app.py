@@ -14,6 +14,7 @@ from daocha.doi_budget import (
     audit_doi_budget,
     check_doi_available,
     format_audit_report,
+    format_marker_report,
     normalize_doi,
     validate_one_to_one_markers,
 )
@@ -430,7 +431,7 @@ def render_export() -> None:
         try:
             markers = validate_one_to_one_markers(workspace.registry)
             audit = audit_doi_budget(workspace.registry)
-            log.value = format_audit_report(audit) + "\n\n" + str(markers)
+            log.value = format_audit_report(audit) + "\n\n" + format_marker_report(markers)
         except Exception as exc:
             log.value = str(exc)
 

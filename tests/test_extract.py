@@ -2,9 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from daocha.extract import MarkerExtractError, analyze_markers, extract_markers
+from daocha.doi_budget import assert_registry_valid
+from daocha.export import run_export
+from daocha.extract import MarkerExtractError, analyze_markers, build_registry, extract_markers
 from daocha.manuscript import backfill_source_paragraphs
-from daocha.extract import build_registry
+from daocha.storage import create_project
 
 
 def test_extract_markers_from_text(tmp_path: Path) -> None:
@@ -70,3 +72,43 @@ def test_backfill_numbers_empty_slots(tmp_path: Path) -> None:
     assert "第一句" in first["sourceParagraph"]
     assert "【2】" in second["sourceParagraph"]
     assert "第二句" in second["sourceParagraph"]
+
+
+def test_create_project_does_not_require_user_numbers(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("daocha.storage.projects_root", lambda: tmp_path / "projects")
+    source = tmp_path / "manuscript.txt"
+    source.write_text(
+        "补偿政策改变了牧户决策【】。遥感可以监测植被覆盖【】。",
+        encoding="utf-8",
+    )
+    registry = create_project(
+        title="empty-slots",
+        manuscript=source,
+        target_journal="通用英文作者—年份",
+    )
+    citations = registry["citations"]
+    assert [item["id"] for item in citations] == ["C001", "C002"]
+    assert [item["marker"] for item in citations] == ["【1】", "【2】"]
+    assert "补偿政策" in citations[0]["sourceParagraph"]
+    assert "【1】" in citations[0]["sourceParagraph"]
+    assert "遥感" in citations[1]["sourceParagraph"]
+    copied = tmp_path / "projects" / registry["meta"]["projectId"] / "manuscript.txt"
+    original = copied.read_text(encoding="utf-8")
+    assert "【】" in original
+    assert "【1】" not in original
+
+    for index, item in enumerate(citations, start=1):
+        item["userDecision"] = "keep"
+        item["status"] = "locked"
+        item["doi"] = f"10.1000/empty-{index}"
+        item["year"] = 2020 + index
+        item["title"] = f"English journal article {index}"
+        item["journal"] = "Journal of Environmental Management"
+        item["recommended"] = f"Smith, {2020 + index}"
+        item["authorsFormatted"] = "Smith, A."
+        item["url"] = f"https://doi.org/{item['doi']}"
+
+    assert_registry_valid(registry, require_locked=True)
+    phase3, _phase4 = run_export(registry, manuscript_path=copied, require_locked=True)
+    assert "(Smith, 2021)" in phase3
+    assert "(Smith, 2022)" in phase3
