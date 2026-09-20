@@ -1,4 +1,4 @@
-from daocha.doi_budget import audit_doi_budget, check_doi_available
+from citeverify.doi_budget import audit_doi_budget, check_doi_available
 
 
 def _registry(dois: list[str]) -> dict:

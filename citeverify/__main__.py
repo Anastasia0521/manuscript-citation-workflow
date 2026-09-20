@@ -1,4 +1,4 @@
-"""python -m daocha"""
+"""python -m citeverify"""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import sys
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="daocha", description="倒插文献桌面工具")
+    parser = argparse.ArgumentParser(prog="citeverify", description="引文核实桌面工具")
     parser.add_argument(
         "--browser",
         action="store_true",
@@ -15,7 +15,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    from daocha.app import run_app
+    from citeverify.app import run_app
 
     run_app(browser=args.browser)
     return 0

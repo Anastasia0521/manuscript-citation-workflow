@@ -10,12 +10,12 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
-from daocha.doi_budget import normalize_doi
-from daocha.mdpi import is_mdpi_record, mdpi_reason
+from citeverify.doi_budget import normalize_doi
+from citeverify.mdpi import is_mdpi_record, mdpi_reason
 
 _CACHE: dict[str, dict[str, Any]] = {}
 USER_AGENT = (
-    "Daocha/1.0 (https://github.com/Anastasia0521/manuscript-citation-workflow; "
+    "CiteVerify/1.0 (https://github.com/Anastasia0521/manuscript-citation-workflow; "
     "mailto:anastasiachan@163.com)"
 )
 _CJK_RE = re.compile(r"[\u4e00-\u9fff]")

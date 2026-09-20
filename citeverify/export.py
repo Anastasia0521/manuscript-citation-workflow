@@ -5,15 +5,15 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
-from daocha.citation_format import (
+from citeverify.citation_format import (
     apply_year_suffixes_to_registry,
     build_phase4_audit,
     build_reference_entries,
     citation_paren_style,
 )
-from daocha.doi_budget import assert_registry_valid, normalize_doi, sort_citations
-from daocha.manuscript import backfill_source_paragraphs, collect_cited_paragraphs
-from daocha.reference_format import format_reference_line, reference_sort_key
+from citeverify.doi_budget import assert_registry_valid, normalize_doi, sort_citations
+from citeverify.manuscript import backfill_source_paragraphs, collect_cited_paragraphs
+from citeverify.reference_format import format_reference_line, reference_sort_key
 
 
 def format_inline_citation(

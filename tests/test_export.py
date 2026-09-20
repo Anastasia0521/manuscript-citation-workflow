@@ -1,13 +1,13 @@
 import pytest
 
-from daocha.citation_format import (
+from citeverify.citation_format import (
     format_short_cite,
     is_reference_entry,
     merge_adjacent_citation_groups,
 )
-from daocha.crossref import require_usable_journal_article, usable_journal_article
-from daocha.doi_budget import assert_registry_valid
-from daocha.reference_format import format_reference_line_gbt7714, format_reference_line_jem
+from citeverify.crossref import require_usable_journal_article, usable_journal_article
+from citeverify.doi_budget import assert_registry_valid
+from citeverify.reference_format import format_reference_line_gbt7714, format_reference_line_jem
 
 
 def test_merge_adjacent_cites() -> None:

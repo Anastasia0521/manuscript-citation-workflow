@@ -5,8 +5,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from daocha.doi_budget import normalize_doi
-from daocha.journals import style_for_journal
+from citeverify.doi_budget import normalize_doi
+from citeverify.journals import style_for_journal
 
 JOURNAL_ABBREV: dict[str, str] = {
     "Journal of Environmental Management": "J. Environ. Manag.",

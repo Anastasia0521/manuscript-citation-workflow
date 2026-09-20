@@ -3,12 +3,12 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "daocha"
+name = "citeverify"
 version = "1.0.0"
-description = "倒插文献：从带【】的稿件提取引文位、核对文献并导出正文与 References"
+description = "引文核实：从带【】的稿件提取引文位、核对文献并导出正文与 References"
 readme = "README.md"
 requires-python = ">=3.11"
-authors = [{ name = "Daocha" }]
+authors = [{ name = "CiteVerify" }]
 dependencies = [
   "pymupdf>=1.24",
   "python-docx>=1.1",
@@ -21,10 +21,10 @@ dependencies = [
 dev = ["pytest>=8.0", "pyinstaller>=6.10"]
 
 [project.scripts]
-daocha = "daocha.__main__:main"
+citeverify = "citeverify.__main__:main"
 
 [tool.setuptools.packages.find]
-include = ["daocha*"]
+include = ["citeverify*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

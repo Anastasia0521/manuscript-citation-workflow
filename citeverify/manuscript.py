@@ -6,13 +6,13 @@ import re
 from pathlib import Path
 from typing import Any
 
-from daocha.citation_format import (
+from citeverify.citation_format import (
     apply_year_suffixes_to_registry,
     citation_paren_style,
     format_short_cite,
     merge_adjacent_citation_groups,
 )
-from daocha.extract import (
+from citeverify.extract import (
     MARKER_RE,
     is_slot_token,
     normalize_manuscript_text,

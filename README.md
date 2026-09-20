@@ -1,12 +1,32 @@
 # manuscript-citation-workflow
 
-论文初稿写完了，引用还空着的时候，用这个软件来补文献。
+**引文核实**（CiteVerify）帮你把已经写好的稿件里，每一处还空着的引用核对清楚。
 
 你在需要引用的地方打一个空的 `【】`。打开软件后，对着每一处去查找、筛选、插入英文期刊论文，最后导出两份东西：一份是已经填好引用的正文，一份是 References。
 
-软件在本机窗口里使用（窗口标题是「倒插文献」）。查找文献时需要能上网，走的是 [Crossref](https://www.crossref.org/)。
+软件在本机窗口里使用（窗口标题是「引文核实」）。查找文献时需要能上网，走的是 [Crossref](https://www.crossref.org/)。
 
 仓库：<https://github.com/Anastasia0521/manuscript-citation-workflow>
+
+---
+
+## 这不是随意安插文献
+
+有人一看到「给写好的稿补文献」，会担心是不是在做学术不端。这个软件的用法正好相反：它假定引言和正文是你自己写的，每一条文献都要你亲自看过，才能进成稿。
+
+**1. 先有你自己写的稿**  
+软件不会代写引言，也不会凭空生成一段话再往里塞文献。你必须先选一份已经写好的稿件（PDF、Word、`.txt` 或 `.md`）。它只处理稿里你标出的 `【】`。没有这份稿，软件建不成项目。
+
+**2. 查找有明确来源，不是随便编一篇**  
+文献来自 Crossref，用你填写的主张或你输入的英文关键词去匹配，也可以直接粘贴 DOI。能留下来的必须是带 DOI 的英文期刊论文：没有 DOI、不是期刊论文、题名含中文、或 MDPI 的期刊，都会被拒绝。同一篇（同一个 DOI）在一篇稿里最多用 2 次。检索词来自你写的内容，不是软件编造的。
+
+**3. 每一条都要你自己核对**  
+软件列出的是候选，不是定稿。每一处都要你看原句、看这篇文献，再选「保留」或「删除【】」。没有你确认过的条目，不能导出。它不会在你没看过的情况下，自动把文献写进正文。
+
+**4. 提供网页，方便你核实能不能引用**  
+有 DOI 时会出现 **打开 DOI 核对**。请点开出版社或 DOI 页面，确认这篇真实存在，并且确实支撑你那句话，再决定用不用。
+
+请把这个工具当成核对和记录用的助手，而不是替你完成引用的机器。
 
 ---
 
@@ -58,7 +78,7 @@ Word 只读正文段落和表格，不读页眉、页脚、脚注。PDF 按整�
 
 如果旧稿已经全部写成互不重复的 `【1】` `【2】`，软件会沿用。不要把空的 `【】` 和已编号的混在同一篇里。
 
-从源码运行需要 Python 3.11 或更高。若你用的是已经打包好的 `Daocha.exe`，不必装 Python。
+从源码运行需要 Python 3.11 或更高。若你用的是已经打包好的 `CiteVerify.exe`，不必装 Python。
 
 ---
 
@@ -71,7 +91,7 @@ Windows：
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
-.\.venv\Scripts\daocha.exe
+.\.venv\Scripts\citeverify.exe
 ```
 
 也可以双击 `run.bat`。第一次会自动创建环境并安装，以后再点就直接打开。
@@ -81,13 +101,13 @@ macOS / Linux：
 ```bash
 python -m venv .venv
 .venv/bin/pip install -e .
-.venv/bin/daocha
+.venv/bin/citeverify
 ```
 
 窗口打不开时，加上 `--browser`，会用浏览器打开同一套界面：
 
 ```powershell
-.\.venv\Scripts\daocha.exe --browser
+.\.venv\Scripts\citeverify.exe --browser
 ```
 
 不要在命令行里传稿件路径，选文件在窗口里完成。
@@ -113,7 +133,7 @@ python -m venv .venv
 
 稿件和一份记录表会放在本机项目文件夹。默认位置在首页「项目存放在：」那一行，Windows 上一般是：
 
-`C:\Users\<用户名>\AppData\Local\Daocha\Daocha\projects\`
+`C:\Users\<用户名>\AppData\Local\CiteVerify\CiteVerify\projects\`
 
 可用 **更改存放位置** 改到别的盘。已有项目点 **打开**。第一次用不必点 **导入旧项目**。
 
@@ -179,7 +199,7 @@ python -m venv .venv
 .\scripts\build_windows.ps1
 ```
 
-完成后，把整个 `dist\Daocha` 文件夹拷走（里面要有 `Daocha.exe` 和 `_internal`），双击 `Daocha.exe`。不要只拷一个 exe。
+完成后，把整个 `dist\CiteVerify` 文件夹拷走（里面要有 `CiteVerify.exe` 和 `_internal`），双击 `CiteVerify.exe`。不要只拷一个 exe。
 
 稿件不在这个文件夹里，仍在前面说的项目存放位置。
 

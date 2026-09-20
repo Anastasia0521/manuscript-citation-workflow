@@ -6,8 +6,8 @@ import re
 from collections import defaultdict
 from typing import Any
 
-from daocha.doi_budget import normalize_doi, sort_citations
-from daocha.journals import style_for_journal
+from citeverify.doi_budget import normalize_doi, sort_citations
+from citeverify.journals import style_for_journal
 
 KEEP_DECISIONS = frozenset({"keep"})
 

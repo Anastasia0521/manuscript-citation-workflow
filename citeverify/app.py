@@ -1,4 +1,4 @@
-"""Desktop UI for 倒插文献."""
+"""Desktop UI for 引文核实."""
 
 from __future__ import annotations
 
@@ -8,9 +8,9 @@ from typing import Any
 
 from nicegui import app, ui
 
-from daocha.config import projects_root, set_projects_root, free_port
-from daocha.crossref import apply_meta, fetch_doi, search_works
-from daocha.doi_budget import (
+from citeverify.config import projects_root, set_projects_root, free_port
+from citeverify.crossref import apply_meta, fetch_doi, search_works
+from citeverify.doi_budget import (
     audit_doi_budget,
     check_doi_available,
     format_audit_report,
@@ -18,10 +18,10 @@ from daocha.doi_budget import (
     normalize_doi,
     validate_one_to_one_markers,
 )
-from daocha.export import progress_stats, run_export
-from daocha.journals import journal_choices
-from daocha.mdpi import is_mdpi_record, mdpi_reason
-from daocha.storage import (
+from citeverify.export import progress_stats, run_export
+from citeverify.journals import journal_choices
+from citeverify.mdpi import is_mdpi_record, mdpi_reason
+from citeverify.storage import (
     create_project,
     import_legacy_registry,
     list_projects,
@@ -109,7 +109,7 @@ def header_bar(title: str, *, show_home: bool = False) -> None:
 
 
 def render_home() -> None:
-    header_bar("倒插文献")
+    header_bar("引文核实")
     with ui.column().classes("w-full max-w-5xl mx-auto p-8 gap-6"):
         ui.label("把带【】的稿件做成可核对、可导出的引文稿。").classes(
             "text-slate-600 text-base"
@@ -203,7 +203,7 @@ def open_import_dialog() -> None:
             manuscript_label.value = path
 
     with ui.dialog() as dialog, ui.card().classes("w-[560px]"):
-        ui.label("导入旧的倒插文献项目").classes("text-lg")
+        ui.label("导入旧的引文核实项目").classes("text-lg")
         ui.label("会把 registry 和稿件复制进本机数据目录，不再依赖原来的盘符。").classes(
             "text-sm text-slate-500"
         )
@@ -243,7 +243,7 @@ def render_project(project_id: str) -> None:
     try:
         workspace.open(project_id)
     except Exception as exc:
-        header_bar("倒插文献", show_home=True)
+        header_bar("引文核实", show_home=True)
         ui.label(str(exc)).classes("p-8")
         return
 
@@ -488,11 +488,11 @@ def run_app(*, browser: bool = False) -> None:
     setup_pages()
     port = free_port()
     if browser:
-        ui.run(title="倒插文献", reload=False, port=port, show=True)
+        ui.run(title="引文核实", reload=False, port=port, show=True)
         return
-    app.native.window_args["title"] = "倒插文献"
+    app.native.window_args["title"] = "引文核实"
     ui.run(
-        title="倒插文献",
+        title="引文核实",
         native=True,
         reload=False,
         port=port,

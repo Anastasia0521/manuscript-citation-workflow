@@ -1,11 +1,11 @@
 import json
 from pathlib import Path
 
-from daocha.storage import import_legacy_registry
+from citeverify.storage import import_legacy_registry
 
 
 def test_import_maps_legacy_decisions(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr("daocha.storage.projects_root", lambda: tmp_path)
+    monkeypatch.setattr("citeverify.storage.projects_root", lambda: tmp_path)
     src = tmp_path / "old.json"
     src.write_text(
         json.dumps(

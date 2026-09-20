@@ -2,11 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from daocha.doi_budget import assert_registry_valid
-from daocha.export import run_export
-from daocha.extract import MarkerExtractError, analyze_markers, build_registry, extract_markers
-from daocha.manuscript import backfill_source_paragraphs
-from daocha.storage import create_project
+from citeverify.doi_budget import assert_registry_valid
+from citeverify.export import run_export
+from citeverify.extract import MarkerExtractError, analyze_markers, build_registry, extract_markers
+from citeverify.manuscript import backfill_source_paragraphs
+from citeverify.storage import create_project
 
 
 def test_extract_markers_from_text(tmp_path: Path) -> None:
@@ -75,7 +75,7 @@ def test_backfill_numbers_empty_slots(tmp_path: Path) -> None:
 
 
 def test_create_project_does_not_require_user_numbers(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr("daocha.storage.projects_root", lambda: tmp_path / "projects")
+    monkeypatch.setattr("citeverify.storage.projects_root", lambda: tmp_path / "projects")
     source = tmp_path / "manuscript.txt"
     source.write_text(
         "补偿政策改变了牧户决策【】。遥感可以监测植被覆盖【】。",

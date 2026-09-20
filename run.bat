@@ -5,4 +5,4 @@ if not exist ".venv\Scripts\python.exe" (
   ".venv\Scripts\python.exe" -m pip install -U pip
   ".venv\Scripts\python.exe" -m pip install -e .
 )
-".venv\Scripts\daocha.exe" %*
+".venv\Scripts\citeverify.exe" %*

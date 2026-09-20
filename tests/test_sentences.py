@@ -1,4 +1,4 @@
-from daocha.manuscript import extract_source_paragraph, normalize_sentence
+from citeverify.manuscript import extract_source_paragraph, normalize_sentence
 
 
 def test_english_sentence_keeps_spaces() -> None:

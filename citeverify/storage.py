@@ -9,9 +9,9 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from daocha.config import projects_root
-from daocha.extract import MarkerExtractError, build_registry, extract_markers
-from daocha.manuscript import backfill_source_paragraphs
+from citeverify.config import projects_root
+from citeverify.extract import MarkerExtractError, build_registry, extract_markers
+from citeverify.manuscript import backfill_source_paragraphs
 
 LEGACY_KEEP_DECISIONS = frozenset({"keep_engel_2008", "split_feock_inline"})
 

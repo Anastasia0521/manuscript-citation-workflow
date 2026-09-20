@@ -8,8 +8,8 @@ from typing import Any
 
 from platformdirs import user_data_dir
 
-APP_NAME = "Daocha"
-APP_AUTHOR = "Daocha"
+APP_NAME = "CiteVerify"
+APP_AUTHOR = "CiteVerify"
 DEFAULT_PORT = 18765
 
 

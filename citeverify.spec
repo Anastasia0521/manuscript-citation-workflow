@@ -11,10 +11,10 @@ for package in ("nicegui", "webview"):
     binaries += pkg_binaries
     hiddenimports += pkg_hidden
 
-datas += collect_data_files("daocha")
+datas += collect_data_files("citeverify")
 
 a = Analysis(
-    ["daocha/__main__.py"],
+    ["citeverify/__main__.py"],
     pathex=["."],
     binaries=binaries,
     datas=datas,
@@ -31,7 +31,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="Daocha",
+    name="CiteVerify",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -46,5 +46,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="Daocha",
+    name="CiteVerify",
 )

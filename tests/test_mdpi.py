@@ -1,5 +1,5 @@
-from daocha.mdpi import is_mdpi_record, mdpi_reason
-from daocha.storage import LEGACY_KEEP_DECISIONS
+from citeverify.mdpi import is_mdpi_record, mdpi_reason
+from citeverify.storage import LEGACY_KEEP_DECISIONS
 
 
 def test_mdpi_prefix() -> None:
