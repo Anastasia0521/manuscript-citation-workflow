@@ -121,7 +121,7 @@ def render_home() -> None:
 
         projects = list_projects()
         if not projects:
-            ui.label("还没有稿件。先选一份带【1】【2】的 PDF 或 Word。").classes(
+            ui.label("还没有稿件。先选一份带【】的 PDF 或 Word。").classes(
                 "text-slate-500"
             )
             return

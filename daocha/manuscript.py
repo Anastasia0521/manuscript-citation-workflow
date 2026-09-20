@@ -12,7 +12,12 @@ from daocha.citation_format import (
     format_short_cite,
     merge_adjacent_citation_groups,
 )
-from daocha.extract import MARKER_RE, normalize_manuscript_text, read_manuscript_text
+from daocha.extract import (
+    MARKER_RE,
+    is_slot_token,
+    normalize_manuscript_text,
+    read_manuscript_text,
+)
 
 CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 LATIN_WORD_RE = re.compile(r"[A-Za-z]{3,}")
@@ -27,14 +32,14 @@ def inject_canonical_markers(text: str, registry_markers: list[str]) -> str:
     parts: list[str] = []
     last = 0
     found = list(MARKER_RE.finditer(text))
-    numbered = [m for m in found if re.fullmatch(r"【\d+】", m.group(0))]
-    if len(numbered) != len(registry_markers):
+    slots = [match for match in found if is_slot_token(match.group(0))]
+    if len(slots) != len(registry_markers):
         raise ValueError(
-            "稿件里的【n】数量和登记表不一致："
-            f"稿件 {len(numbered)} 处，登记 {len(registry_markers)} 处。"
-            "请不要改编号后再导出；必要时用原稿重新建项目。"
+            "稿件里的【】数量和登记表不一致："
+            f"稿件 {len(slots)} 处，登记 {len(registry_markers)} 处。"
+            "请不要增删【】后再导出；必要时用原稿重新建项目。"
         )
-    for i, match in enumerate(numbered):
+    for i, match in enumerate(slots):
         parts.append(text[last : match.start()])
         parts.append(registry_markers[i])
         last = match.end()

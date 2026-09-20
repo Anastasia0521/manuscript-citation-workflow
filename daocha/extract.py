@@ -8,12 +8,14 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-# Canonical slot: 【1】 【2】 …  (ASCII digits; fullwidth digits are normalized)
+# Manuscript slots are empty 【】; the app numbers them 【1】【2】… in document order.
 VALID_INNER_RE = re.compile(r"^\d+$")
 ANY_MARKER_RE = re.compile(r"【[^】]*】")
 SPACED_NUMBER_RE = re.compile(r"【\s*(\d+)\s*】")
+EMPTY_SLOT_RE = re.compile(r"【[\s\ufffd]*】")
 RANGE_INNER_RE = re.compile(r"[-–—,/]|到|至")
 FULLWIDTH_DIGITS = str.maketrans("０１２３４５６７８９", "0123456789")
+EMPTY_INNER_CHARS = frozenset(" \t\r\n\u3000\ufffd")
 
 # Re-exported name used by manuscript.py
 MARKER_RE = ANY_MARKER_RE
@@ -25,9 +27,23 @@ class MarkerExtractError(ValueError):
         super().__init__(format_extract_report(report))
 
 
+def is_empty_slot_inner(inner: str) -> bool:
+    return (not inner.strip()) or all(char in EMPTY_INNER_CHARS for char in inner)
+
+
+def is_slot_token(raw: str) -> bool:
+    if not (raw.startswith("【") and raw.endswith("】") and len(raw) >= 2):
+        return False
+    inner = raw[1:-1]
+    if is_empty_slot_inner(inner):
+        return True
+    return bool(VALID_INNER_RE.fullmatch(inner.strip()))
+
+
 def normalize_manuscript_text(text: str) -> str:
-    """Unify digits and close up 【 12 】 → 【12】."""
+    """Unify digits, collapse empty 【 】, and close up 【 12 】 → 【12】."""
     text = text.translate(FULLWIDTH_DIGITS)
+    text = EMPTY_SLOT_RE.sub("【】", text)
     return SPACED_NUMBER_RE.sub(lambda m: f"【{m.group(1)}】", text)
 
 
@@ -74,46 +90,82 @@ def _snippet(text: str, start: int, end: int, radius: int = 40) -> str:
     return re.sub(r"\s+", " ", text[a:b]).strip()
 
 
+def _classify_marker(raw: str, *, location: str, snippet: str) -> dict[str, Any]:
+    inner = raw[1:-1]
+    base = {"marker": raw, "location": location, "context": snippet}
+    if is_empty_slot_inner(inner):
+        return {**base, "kind": "empty", "marker": "【】"}
+    if RANGE_INNER_RE.search(inner) or inner.count("【"):
+        return {**base, "kind": "range"}
+    if not VALID_INNER_RE.fullmatch(inner.strip()):
+        return {**base, "kind": "invalid"}
+    return {**base, "kind": "numbered", "marker": f"【{inner.strip()}】"}
+
+
 def analyze_markers(text: str, *, location: str = "") -> dict[str, Any]:
     text = normalize_manuscript_text(text)
     issues: list[dict[str, Any]] = []
-    valid: list[dict[str, str]] = []
+    slots: list[dict[str, str]] = []
 
     for match in ANY_MARKER_RE.finditer(text):
-        raw = match.group(0)
-        inner = raw[1:-1]
-        loc = location
-        snippet = _snippet(text, match.start(), match.end())
-        if not inner.strip() or "\ufffd" in inner:
-            issues.append(
-                {"type": "empty", "marker": raw, "location": loc, "context": snippet}
-            )
+        classified = _classify_marker(
+            match.group(0),
+            location=location,
+            snippet=_snippet(text, match.start(), match.end()),
+        )
+        kind = classified.pop("kind")
+        if kind in {"range", "invalid"}:
+            issues.append({"type": kind, **classified})
             continue
-        if RANGE_INNER_RE.search(inner) or inner.count("【"):
-            issues.append(
-                {"type": "range", "marker": raw, "location": loc, "context": snippet}
-            )
-            continue
-        if not VALID_INNER_RE.fullmatch(inner.strip()):
-            issues.append(
-                {"type": "invalid", "marker": raw, "location": loc, "context": snippet}
-            )
-            continue
-        marker = f"【{inner.strip()}】"
-        valid.append(
+        slots.append({"kind": kind, **classified})
+
+    return _finalize_slots(slots, issues)
+
+
+def _finalize_slots(
+    slots: list[dict[str, str]], issues: list[dict[str, Any]]
+) -> dict[str, Any]:
+    empties = [item for item in slots if item.get("kind") == "empty"]
+    numbered = [item for item in slots if item.get("kind") == "numbered"]
+
+    if empties and numbered:
+        issues.append(
             {
-                "marker": marker,
-                "context": snippet,
-                "location": loc,
+                "type": "mixed",
+                "marker": "【】 / 【n】",
+                "location": "",
+                "context": "请统一写成空的【】，由软件编号；或全文都用互不重复的【1】【2】",
             }
         )
+        return {
+            "markers": [],
+            "issues": issues,
+            "valid_slots": 0,
+            "raw_hits": len(slots),
+        }
+
+    if empties:
+        markers = [
+            {
+                "marker": f"【{index}】",
+                "context": item.get("context") or "",
+                "location": item.get("location") or "",
+            }
+            for index, item in enumerate(empties, start=1)
+        ]
+        return {
+            "markers": markers,
+            "issues": issues,
+            "valid_slots": len(markers),
+            "raw_hits": len(slots),
+        }
 
     by_marker: dict[str, list[dict[str, str]]] = defaultdict(list)
-    for item in valid:
+    for item in numbered:
         by_marker[item["marker"]].append(item)
     unique: list[dict[str, str]] = []
     seen: set[str] = set()
-    for item in valid:
+    for item in numbered:
         marker = item["marker"]
         if marker in seen:
             continue
@@ -132,72 +184,52 @@ def analyze_markers(text: str, *, location: str = "") -> dict[str, Any]:
                 }
             )
             continue
-        unique.append(item)
-
+        unique.append(
+            {
+                "marker": item["marker"],
+                "context": item.get("context") or "",
+                "location": item.get("location") or "",
+            }
+        )
     return {
         "markers": unique,
         "issues": issues,
         "valid_slots": len(unique),
-        "raw_hits": len(valid),
+        "raw_hits": len(slots),
     }
 
 
 def analyze_file(path: Path | str) -> dict[str, Any]:
-    merged_issues: list[dict[str, Any]] = []
-    merged_valid: list[dict[str, str]] = []
+    issues: list[dict[str, Any]] = []
+    slots: list[dict[str, str]] = []
     for location, chunk in iter_text_chunks(path):
-        part = analyze_markers(chunk, location=location)
-        merged_issues.extend(part["issues"])
-        merged_valid.extend(part["markers"])
-
-    by_marker: dict[str, list[dict[str, str]]] = defaultdict(list)
-    for item in merged_valid:
-        by_marker[item["marker"]].append(item)
-    unique: list[dict[str, str]] = []
-    seen: set[str] = set()
-    extra_dupes: list[dict[str, Any]] = []
-    for item in merged_valid:
-        marker = item["marker"]
-        if marker in seen:
-            continue
-        seen.add(marker)
-        copies = by_marker[marker]
-        if len(copies) > 1:
-            extra_dupes.append(
-                {
-                    "type": "duplicate",
-                    "marker": marker,
-                    "count": len(copies),
-                    "location": "；".join(
-                        c.get("location") or "" for c in copies if c.get("location")
-                    ),
-                    "context": copies[0].get("context") or "",
-                }
+        text = normalize_manuscript_text(chunk)
+        for match in ANY_MARKER_RE.finditer(text):
+            classified = _classify_marker(
+                match.group(0),
+                location=location,
+                snippet=_snippet(text, match.start(), match.end()),
             )
-            continue
-        unique.append(item)
-
-    issues = [i for i in merged_issues if i.get("type") != "duplicate"] + extra_dupes
-    return {
-        "markers": unique,
-        "issues": issues,
-        "valid_slots": len(unique),
-        "raw_hits": len(merged_valid),
-    }
+            kind = classified.pop("kind")
+            if kind in {"range", "invalid"}:
+                issues.append({"type": kind, **classified})
+            else:
+                slots.append({"kind": kind, **classified})
+    return _finalize_slots(slots, issues)
 
 
 def format_extract_report(report: dict[str, Any]) -> str:
     lines = [
-        "【】抽取未通过。请改成一个坑一个号：【1】【2】【3】，不要写【1-3】，不要重复用同一个号。",
+        "【】抽取未通过。请在每个要插文献的位置写空的【】（编号由软件按出现顺序生成）。不要写【1-3】。",
         f"合法引文位：{report.get('valid_slots', 0)}",
         f"问题：{len(report.get('issues') or [])} 处",
         "",
     ]
     labels = {
-        "empty": "空括号（数字丢失，常见于 Word 转 PDF）",
         "range": "合并/范围编号",
         "duplicate": "同一个号用了两次",
-        "invalid": "不是纯数字编号",
+        "invalid": "括号里不是空的，也不是纯数字编号",
+        "mixed": "空【】和已编号【n】混用",
     }
     for issue in report.get("issues") or []:
         kind = labels.get(issue.get("type"), issue.get("type"))
@@ -224,7 +256,7 @@ def extract_markers(path: Path | str) -> list[dict[str, str]]:
                         "type": "invalid",
                         "marker": "",
                         "location": "",
-                        "context": "没有找到【1】【2】这种标记",
+                        "context": "没有找到【】占位。每个要插文献的位置请写成空的【】。",
                     }
                 ],
             }
